@@ -6,7 +6,6 @@ import pygame.mixer
 class Game:
     highScoreFilename = "hightscore.txt"
     window = None
-    keys = []
     font= None
     fpsClock = None
     def __init__(self, name):
@@ -31,10 +30,12 @@ class Game:
         pygame.quit()
 
 class Component:
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self):
+        self.parent = None
     def draw(self):
         print("Vous devez définir la méthode draw")
+    def handleEvents(self, keys):
+        print("Vous devez définir la méthode handleEvents")
 
         
 class Position:
@@ -76,8 +77,8 @@ class Position:
         self.yip = self.y*BOXSIZE+(GAMEAREA_ORIGINY+1)
 
 class Button(Component):
-    def __init__(self, screen, posx, posy, width, height, text, size, action):
-        super().__init__(screen)
+    def __init__(self, posx, posy, width, height, text, size, action):
+        super().__init__()
         self.posx = posx
         self.posy = posy
         self.width = width
@@ -114,10 +115,14 @@ class Screen:
         self.game = None
     def addComponent(self, component):
        self.components.append(component)
+       component.parent = self
     def draw(self):
         self.game.window.blit(self.image, (0,0))
         for component in self.components:
             component.draw()
+    def handleEvents(self, keys):
+        for component in self.components:
+            component.handleEvents(keys)
     def run(self):
         self.flag = True
         while self.flag :

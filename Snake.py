@@ -8,9 +8,9 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (500, 150)
 
 
 
-class Snake(Component, pygame.sprite.Sprite):
-    def __init__(self, screen, posx, posy):
-        super().__init__(screen)
+class Snake(Component):
+    def __init__(self, posx, posy):
+        super().__init__()
         self.compteur = 0
         self.started = False
         self.direction = "up"
@@ -20,7 +20,8 @@ class Snake(Component, pygame.sprite.Sprite):
         self.speed = 6
         self.frames = int(FPS/self.speed)
         self.pixelsToMove = BOXSIZE/self.frames      
-        self.target = None  
+        self.target = None
+        self.keys = []
         print("Pixels to move:",self.pixelsToMove )
         pygame.sprite.Sprite.__init__(self)
         self.spriteSheet = pygame.image.load("images/snake-graphics.png").convert_alpha()
@@ -64,59 +65,33 @@ class Snake(Component, pygame.sprite.Sprite):
         #self.move()
     def draw(self):
         for i,seg in enumerate(reversed(self.body)):
-            if i == 0:
-                if self.body[-2] == seg.atRight():
-                    if( self.started):
-                        seg.incrementXInPixel(self.pixelsToMove)
-                    Game.window.blit(self.sprite(128, 64),(seg.xInPixel(), seg.yInPixel()))
-                if self.body[-2] == seg.atLeft():
-                    if( self.started):
-                        seg.incrementXInPixel(-self.pixelsToMove)
-                    Game.window.blit(self.sprite(96, 96),(seg.xInPixel(), seg.yInPixel()))
-                if self.body[-2] == seg.atUp():
-                    if( self.started):
+            if i == len(self.body)-1:
+                if( self.started):
+                    if self.direction == "up":
                         seg.incrementYInPixel(-self.pixelsToMove)
-                    Game.window.blit(self.sprite(96, 64),(seg.xInPixel(), seg.yInPixel()))
-                if self.body[-2] == seg.atDown():
-                    if( self.started):
+                    if self.direction == "down":
                         seg.incrementYInPixel(self.pixelsToMove)
-                    Game.window.blit(self.sprite(128, 96),(seg.xInPixel(), seg.yInPixel()))
-            elif i == len(self.body)-1:
-                if self.direction == "up":
-                    if( self.started):
-                        seg.incrementYInPixel(-self.pixelsToMove)
-                    print("Position:",seg.yInPixel())
-                    Game.window.blit(self.sprite(96, 0),(seg.xInPixel(), seg.yInPixel()))
-                if self.direction == "down":
-                    if( self.started):
-                        seg.incrementYInPixel(self.pixelsToMove)
-                    Game.window.blit(self.sprite(128, 32),(seg.xInPixel(), seg.yInPixel()))
-                if self.direction == "right":
-                    if( self.started):
+                    if self.direction == "right":
                         seg.incrementXInPixel(self.pixelsToMove)
-                    Game.window.blit(self.sprite(128, 0),(seg.xInPixel(), seg.yInPixel()))
-                if self.direction == "left":
-                    if( self.started):
+                    if self.direction == "left":
                         seg.incrementXInPixel(-self.pixelsToMove)
-                    Game.window.blit(self.sprite(96, 32),(seg.xInPixel(), seg.yInPixel()))
+                Game.window.blit(self.headImage(),(seg.xInPixel(), seg.yInPixel()))
             else:
                 pos = self.body.index(seg)
-                if self.body[pos-1] == seg.atRight():
-                    if( self.started):
+                if( self.started):
+                    if self.body[pos-1] == seg.atRight():
                         seg.incrementXInPixel(self.pixelsToMove)
-                    pygame.draw.rect(Game.window, GREY, (seg.xInPixel(), seg.yInPixel(), BOXSIZE, BOXSIZE))
-                if self.body[pos-1] == seg.atLeft():
-                    if( self.started):
+                    if self.body[pos-1] == seg.atLeft():
                         seg.incrementXInPixel(-self.pixelsToMove)
-                    pygame.draw.rect(Game.window, GREY, (seg.xInPixel(), seg.yInPixel(), BOXSIZE, BOXSIZE))
-                if self.body[pos-1] == seg.atUp():
-                    if( self.started):
+                    if self.body[pos-1] == seg.atUp():
                         seg.incrementYInPixel(-self.pixelsToMove)
-                    pygame.draw.rect(Game.window, GREY, (seg.xInPixel(), seg.yInPixel(), BOXSIZE, BOXSIZE))
-                if self.body[pos-1] == seg.atDown():
-                    if( self.started):
+                    if self.body[pos-1] == seg.atDown():
                         seg.incrementYInPixel(self.pixelsToMove)
-                    pygame.draw.rect(Game.window, GREY, (seg.xInPixel(), seg.yInPixel(), BOXSIZE, BOXSIZE))
+                if i == 0:
+                    Game.window.blit(self.tailImage(),(seg.xInPixel(), seg.yInPixel()))
+                else :
+                    Game.window.blit(self.bodyImage(seg),(seg.xInPixel(), seg.yInPixel()))
+                    #pygame.draw.rect(Game.window, GREY, (seg.xInPixel(), seg.yInPixel(), BOXSIZE, BOXSIZE))
 
     def grow(self):
         self.growing = True
@@ -130,19 +105,59 @@ class Snake(Component, pygame.sprite.Sprite):
     def tail(self) :
         return self.body[-1]
 
-    def sprite(self, x, y):
+    def headImage(self):
+        if self.direction == "up":
+            return self.sprite(96, 0)
+        if self.direction == "down":
+            return self.sprite(128, 32)
+        if self.direction == "right":
+            return self.sprite(128, 0)
+        if self.direction == "left":
+            return self.sprite(96, 32)
+    def tailImage(self):
+        seg = self.body[-1]
+        if self.body[-2] == seg.atRight():
+            return self.sprite(128, 64)
+        if self.body[-2] == seg.atLeft():
+            return self.sprite(96, 96)
+        if self.body[-2] == seg.atUp():
+            return self.sprite(96, 64)
+        if self.body[-2] == seg.atDown():
+            return self.sprite(128, 96)
+
+    def bodyImage(self,seg):
+        pos = self.body.index(seg)
+        if self.body[pos-1] == seg.atRight():
+            return self.sprite(32, 0)
+        if self.body[pos-1] == seg.atLeft():
+            return self.sprite(32, 0)
+        if self.body[pos-1] == seg.atUp():
+            return self.sprite(64, 32)
+        if self.body[pos-1] == seg.atDown():
+            return self.sprite(64, 32)
+    def sprite(self, x,y):
         return self.spriteSheet.subsurface(pygame.Rect(x,y,32,32))
         
-    def handleEvents(self, keys):
+    def handleEvents(self, events):
+        for event in events:
+            if not PlayScreen.perdu and event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT or event.key == pygame.K_DOWN or event.key == pygame.K_UP:
+                    lastKey = None
+                    if len(self.keys) != 0:
+                        lastKey = self.keys[0]
+                        if lastKey != event.key and len(self.keys) < 3:
+                            self.keys.insert(0,event.key)
+                    else :
+                        self.keys.insert(0,event.key)
         self.compteur = self.compteur + 1
         #if not PlayScreen.perdu and self.compteur >= frames:
         if self.state == 'Alive' and self.compteur >= self.frames:
-            print("Keys pressed:",keys)
+            print("Keys pressed:",self.keys)
             isStarted = self.started 
             if isStarted :
                 self.update()
-            if len(keys) != 0:
-                keyPressed= keys.pop()
+            if len(self.keys) != 0:
+                keyPressed= self.keys.pop()
                 if keyPressed == K_RIGHT:
                     self.changeDirection(ALLDIRECTION[2])
                 if keyPressed == K_LEFT:
@@ -184,8 +199,8 @@ class Snake(Component, pygame.sprite.Sprite):
 class Apple(Component):
     imageApple = pygame.transform.scale(pygame.image.load(os.path.join('images', 'Pomme.png')), (BOXSIZE-1, BOXSIZE-1))
 
-    def __init__(self, screen):
-        super().__init__(screen)
+    def __init__(self):
+        super().__init__()
         self.position = Position(random.randint(0,GAMEWIDTH-1), random.randint(0,GAMEHEIGHT-1))
         self.crunched = False
     def draw(self):
@@ -200,9 +215,9 @@ class HomeScreen(Screen):
     def __init__(self, width, height):
         super().__init__(width, height)
         self.image = pygame.image.load(os.path.join('images', 'Menu.png')).convert()
-        self.classic = Button(self, 300,300, 220, 60, "Classique", 50, self.play)
+        self.classic = Button(300,300, 220, 60, "Classique", 50, self.play)
         super().addComponent(self.classic)
-        self.options = Button(self, 300,370, 220, 60, "Options", 50, self.showOptions)
+        self.options = Button(300,370, 220, 60, "Options", 50, self.showOptions)
         super().addComponent(self.options)
     def play(self):
         self.game.setScreen(PlayScreen(WINDOWWIDTH, WINDOWHEIGHT))
@@ -211,6 +226,37 @@ class HomeScreen(Screen):
         self.game.setScreen(OptionsScreen(WINDOWWIDTH, WINDOWHEIGHT))
         self.flag = False
 
+class Score(Component):
+    def __init__(self, x, y):
+        super().__init__()
+        self.x = x
+        self.y = y
+    def draw(self):
+        Game.window.blit(Apple.imageApple, (self.x, self.y))
+        text = Game.font.render("Score : "+str(len(self.parent.apples)-1),0,(0,0,0),(255,255,255))
+        Game.window.blit(text, (self.x+40, self.y+8))
+
+class HighestScore(Component):
+    def __init__(self, x, y):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.value = 0
+        if os.path.isfile(Game.highScoreFilename): 
+            file = open(Game.highScoreFilename,"r")
+            readFile = file.read()
+            if len(readFile) > 0:
+                self.value = int(readFile)
+            file.close()
+        self.hightscore = Game.font.render("Highscore : "+str(self.value),0,(0,0,0),(255,255,255))
+    def draw(self):
+        Game.window.blit(self.hightscore, (self.x, self.y+8))
+    def save(self):
+        score = len(self.parent.apples)-1
+        if score > self.value : 
+            file = open(Game.highScoreFilename,"w")
+            file.write(str(score)) 
+            file.close()
 
 class PlayScreen(Screen):
     compteur = 0
@@ -222,7 +268,6 @@ class PlayScreen(Screen):
         self.image = pygame.Surface((WINDOWWIDTH, WINDOWHEIGHT))
         self.image.fill(WHITE)
         self.apples = []
-        Game.keys = []
         pygame.draw.rect(self.image, LIGHT_GREEN, (GAMEAREA_ORIGINX, GAMEAREA_ORIGINY, BOXSIZE*(GAMEWIDTH), BOXSIZE*(GAMEHEIGHT)))
         for i in range(0, GAMEWIDTH):
             if(i%2 == 0):
@@ -231,68 +276,40 @@ class PlayScreen(Screen):
             if(i%2 == 1):
                 for j in range(0, int((GAMEHEIGHT-1)/2)):
                     pygame.draw.rect(self.image, DARK_GREEN, (GAMEAREA_ORIGINX+BOXSIZE*i, GAMEAREA_ORIGINY+BOXSIZE*(2*j)+BOXSIZE, BOXSIZE, BOXSIZE))
-        self.serpent = Snake(self,7,7)  
-        super().addComponent(self.serpent)
-        self.appleScore = Apple(self)
-        self.appleScore.position.setX( 0 )
-        self.appleScore.position.setY(-2)
-        super().addComponent(self.appleScore)
-        apple = Apple(self)
+        self.score = Score(140, 125)
+        super().addComponent(self.score)
+        self.highestScore = HighestScore(500, 125)
+        super().addComponent(self.highestScore)
+        self.serpent = Snake(7,7)  
+        apple = Apple()
         while apple.position in self.serpent.body:
-            apple = Apple(self)
+            apple = Apple()
         self.apples.append(apple)
         super().addComponent(apple)
-        if os.path.isfile(Game.highScoreFilename): 
-            self.file = open(Game.highScoreFilename,"r")
-            self.readFile = self.file.read()
-            if len(self.readFile) == 0:
-                self.hightscore = Game.font.render("Highscore : 0",0,(0,0,0),(255,255,255))    
-            else:
-                self.hightscore = Game.font.render("Highscore : "+self.readFile,0,(0,0,0),(255,255,255))
-            self.file.close()
-        else :
-                self.hightscore = Game.font.render("Highscore : 0",0,(0,0,0),(255,255,255))    
+        super().addComponent(self.serpent)
 
     def run(self):
         flag = True
         while flag:
             events = pygame.event.get()
-            keysPressed = pygame.key.get_pressed()
             for event in events:
-                if not PlayScreen.perdu and event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT or event.key == pygame.K_DOWN or event.key == pygame.K_UP:
-                        lastKey = None
-                        if len(Game.keys) != 0:
-                            lastKey = Game.keys[0]
-                            if lastKey != event.key and len(Game.keys) < 3:
-                                Game.keys.insert(0,event.key)
-                        else :
-                            Game.keys.insert(0,event.key)
-
                 if event.type == pygame.QUIT:
                     flag = False
                     self.game.screen = None
-            print(Game.keys)
-            self.serpent.handleEvents(Game.keys)
+            self.handleEvents(events)
             if self.serpent.state == 'Dead':
                 PlayScreen.perdu = True
             else:
                 apple = self.apples[-1]
                 if apple.crunched:
-                    apple = Apple(self)
+                    apple = Apple()
                     while apple.position in self.serpent.body:
-                        apple = Apple(self)
+                        apple = Apple()
                     self.apples.append(apple)
+                    super().addComponent(apple)
             self.draw()
-            text = Game.font.render("Score : "+str(len(self.apples)-1),0,(0,0,0),(255,255,255))
-            Game.window.blit(text, (180, 125))
-            Game.window.blit(self.hightscore, (500, 125))
-            self.appleScore.draw()
-            self.apples[-1].draw()
             if PlayScreen.perdu:
-                self.file = open(Game.highScoreFilename,"w")
-                self.file.write(str(len(self.apples)-1))
-                self.file.close()
+                self.highestScore.save()
                 Game.window.blit(self.gameOver, (240, 360))
                 self.game.setScreen(HomeScreen(WINDOWWIDTH, WINDOWHEIGHT)) 
                 PlayScreen.perdu = False
@@ -306,12 +323,12 @@ class OptionsScreen(Screen):
     def __init__(self, width, height):
         super().__init__(width, height)
         self.image = pygame.image.load(os.path.join('images', 'Options.png')).convert()
-        self.retour = Button(self, 300,500, 150, 60, "Retour", 50, self.home)
+        self.retour = Button(300,500, 150, 60, "Retour", 50, self.home)
         super().addComponent(self.retour)
         self.font = pygame.font.Font(None, 40)
-        self.musicOn = Button(self, 300,370, 80, 60, "ON", 40, self.on)
+        self.musicOn = Button(300,370, 80, 60, "ON", 40, self.on)
         super().addComponent(self.musicOn)
-        self.musicOff = Button(self, 400,370, 80, 60, "OFF", 40, self.off)
+        self.musicOff = Button(400,370, 80, 60, "OFF", 40, self.off)
         super().addComponent(self.musicOff)
         self.music = True
     def home(self):
