@@ -17,10 +17,13 @@ class Game:
         Game.window = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
         pygame.display.set_caption(self.name )
         self.screen = None
+        self.screens={}
         return
     
     def setScreen(self,screen) :
-        self.screen = screen
+        self.screen = self.screens[screen]
+    def addScreen(self,screen) :
+        self.screens[screen.name] = screen
         screen.game = self
     
     def run(self):
@@ -30,11 +33,12 @@ class Game:
         pygame.quit()
 
 class Component:
-    def __init__(self):
+    def __init__(self,name):
         self.parent = None
+        self.name = name
     def draw(self):
         print("Vous devez définir la méthode draw")
-    def handleEvents(self, keys):
+    def update(self, context):
         print("Vous devez définir la méthode handleEvents")
 
         
@@ -75,10 +79,13 @@ class Position:
     def reset(self):
         self.xip = self.x*BOXSIZE+(GAMEAREA_ORIGINX+1)
         self.yip = self.y*BOXSIZE+(GAMEAREA_ORIGINY+1)
+    @staticmethod
+    def convertPositionToPixel(x,y):
+        return (x*BOXSIZE+(GAMEAREA_ORIGINX+1),y*BOXSIZE+(GAMEAREA_ORIGINY+1))
 
 class Button(Component):
-    def __init__(self, posx, posy, width, height, text, size, action):
-        super().__init__()
+    def __init__(self, name, posx, posy, width, height, text, size, action):
+        super().__init__(name)
         self.posx = posx
         self.posy = posy
         self.width = width
@@ -100,40 +107,58 @@ class Button(Component):
         box.blit(surf, (x, y))
         self.parent.game.window.blit(box, (self.posx, self.posy))
 
-    def onEvents(self, event):
-        if event.type == MOUSEBUTTONDOWN:
-            if event.button == 1 and self.posx+self.width > event.pos[0] > self.posx and self.posy+self.height > event.pos[1]> self.posy:
-                self.click()
+    def update(self, events):
+        for event in events:
+            if event.type == MOUSEBUTTONDOWN:
+                if event.button == 1 and self.posx+self.width > event.pos[0] > self.posx and self.posy+self.height > event.pos[1]> self.posy:
+                    self.click()
 
     def click(self):
         self.action()
 
 class Screen:
-    def __init__(self, width, height):
+    def __init__(self, name, width, height):
         self.components = []
         self.image = None
         self.game = None
+        self.name = name
     def addComponent(self, component):
        self.components.append(component)
        component.parent = self
+    def removeComponent(self, component):
+        if component in self.components:
+           self.components.remove(component)
+           component.parent = None
     def draw(self):
         self.game.window.blit(self.image, (0,0))
         for component in self.components:
             component.draw()
-    def handleEvents(self, keys):
+    def update(self, context):
         for component in self.components:
-            component.handleEvents(keys)
+            component.update(context)
     def run(self):
         self.flag = True
         while self.flag :
             events = pygame.event.get()
-            keysPressed = pygame.key.get_pressed()
             for event in events:
-                for component in self.components:
-                    component.onEvents(event)
                 if event.type == pygame.QUIT:
                     self.flag = False
                     self.game.screen = None
+            self.update(events)
             self.draw()
             pygame.display.update()
             self.game.fpsClock.tick(FPS)     
+
+class SpriteSheet:
+    def __init__(self,filename, cellSize, n, m):
+        self.sheetImage = pygame.image.load(filename).convert_alpha()
+        self.cellSize = cellSize
+        self.images = []
+        for j in range(0,m):   
+            self.images.append([])         
+            for i in range(0,n):            
+                x = i*32
+                y = j*32
+                self.images[j].append(self.sheetImage.subsurface(pygame.Rect(x,y,cellSize,cellSize)))
+    def image(self,n,m) :
+        return self.images[m][n]
