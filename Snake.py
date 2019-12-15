@@ -87,7 +87,7 @@ class Snake(Component):
         self.spriteSheet = SpriteSheet("images/snake-graphics.png",32,5,4)
         self.compteur = 0
         self.started = False
-        self.direction = "up"
+        self.direction = K_UP
         self.head = SnakeSegment(posx,posy,self.headImage)
         self.tail = self.head.addSegmentAtTail(self.bodyImage).addSegmentAtTail(self.tailImage)
         #self.body = [Position(posx,posy),Position(posx,posy + 1),Position(posx,posy + 2)]
@@ -96,9 +96,9 @@ class Snake(Component):
         self.speed = 6
         self.frames = int(FPS/self.speed)
         self.pixelsToMove = BOXSIZE/self.frames      
-        self.target = None
-        self.keys = []
-        print("Pixels to move:",self.pixelsToMove )
+        self.target = self.head.position.atUp()
+        self.keysPressed = []
+        #print("Pixels to move:",self.pixelsToMove )
         #pygame.sprite.Sprite.__init__(self)
    
     def isAt(self, pos):
@@ -107,57 +107,50 @@ class Snake(Component):
                 return True
         return False
     def move(self):
-        if self.target != None:
-            if self.growing:
-                self.head = self.head.grow(self.target)
-                self.growing = False
-            else :
-                self.head.moveTo(self.target)
-        else:
-            self.alive = False
-        self.target = None
-        if self.direction == "up" and  self.head.position.y > 0:
-                self.target = Position(self.head.position.x,self.head.position.y - 1)
-        if self.direction == "down" and self.head.position.y < GAMEHEIGHT-1:
-                self.target = Position(self.head.position.x,self.head.position.y + 1)
-        if self.direction == "right" and self.head.position.x < GAMEWIDTH-1:
-                self.target = Position(self.head.position.x + 1,self.head.position.y)
-        if self.direction == "left" and self.head.position.x > 0:
-                self.target = Position(self.head.position.x - 1,self.head.position.y)
+        if self.growing:
+            self.head = self.head.grow(self.target)
+            self.growing = False
+        else :
+            self.head.moveTo(self.target)
+        self.target = self.computeTarget()
     def changeDirection(self, direction):
-        if self.direction == "up" and direction == "down":
+        if self.direction == K_UP and direction == K_DOWN:
             return
-        if self.direction == "down" and direction == "up":
+        if self.direction == K_DOWN and direction == K_UP:
             return
-        if self.direction == "right" and direction == "left":
+        if self.direction == K_RIGHT and direction == K_LEFT:
             return
-        if self.direction == "left" and direction == "right":
+        if self.direction == K_LEFT and direction == K_RIGHT:
             return       
         self.started = True
         #print("Change direction to ",direction)
         self.direction = direction
-        self.target = None
-        if self.direction == "up" and  self.head.position.y > 0:
-                self.target = Position(self.head.position.x,self.head.position.y - 1)
-        if self.direction == "down" and self.head.position.y < GAMEHEIGHT-1:
-                self.target = Position(self.head.position.x,self.head.position.y + 1)
-        if self.direction == "right" and self.head.position.x < GAMEWIDTH-1:
-                self.target = Position(self.head.position.x + 1,self.head.position.y)
-        if self.direction == "left" and self.head.position.x > 0:
-                self.target = Position(self.head.position.x - 1,self.head.position.y)
+        self.target = self.computeTarget()
         #self.head.changeTarget(self.target)
-
+    def computeTarget(self) :
+        target = None
+        if self.direction == K_UP:
+                target = self.head.position.atUp()
+        if self.direction == K_DOWN:
+                target = self.head.position.atDown()
+        if self.direction == K_RIGHT:
+                target = self.head.position.atRight()
+        if self.direction == K_LEFT:
+                target = self.head.position.atLeft()
+        if target != None:
+            print("Target:",target.x, target.y)
+        return target
     def draw(self):
         for seg in self.tail.forward():
-            if(self.started):
+            if(self.started and False):
                 if seg.isHead():
-                    if self.direction == "up":
+                    if self.target == seg.position.atUp():
                         seg.position.incrementYInPixel(-self.pixelsToMove)
-                    if self.direction == "down":
+                    if self.target == seg.position.atDown():
                         seg.position.incrementYInPixel(self.pixelsToMove)
-                    if self.direction == "right":
+                    if self.target == seg.position.atRight():
                         seg.position.incrementXInPixel(self.pixelsToMove)
-                    if self.direction == "left":
+                    if self.target == seg.position.atLeft():
                         seg.position.incrementXInPixel(-self.pixelsToMove)
                 elif seg.isTail():
                     if seg.ahead.position == seg.position.atUp():
@@ -188,17 +181,17 @@ class Snake(Component):
         #print("Tail(", self.tail.x,",",self.tail.y,")")
 
     def headImage(self,seg):
-        print("Head image",seg)
-        if self.direction == "up":
+        #print("Head image",seg)
+        if self.target == seg.position.atUp():
             return self.spriteSheet.image(3,0)
-        if self.direction == "down":
+        if self.target == seg.position.atDown():
             return self.spriteSheet.image(4,1)
-        if self.direction == "right":
+        if self.target == seg.position.atRight():
             return self.spriteSheet.image(4,0)
-        if self.direction == "left":
+        if self.target == seg.position.atLeft():
             return self.spriteSheet.image(3,1)
     def tailImage(self,seg):
-        print("Tail image",seg)
+        #print("Tail image",seg)
         if seg.ahead.position == seg.position.atUp():
             return self.spriteSheet.image(3,2)
         if seg.ahead.position == seg.position.atDown():
@@ -209,12 +202,12 @@ class Snake(Component):
             return self.spriteSheet.image(3,3)
 
     def bodyImage(self,seg):
-        print("Body: ",seg.position.x,seg.position.y)
-        print("Body target: ",seg.target.x,seg.target.y)
-        print("Ahead position: ",seg.ahead.position.x,seg.ahead.position.y)
-        print("Ahead target: ",seg.ahead.target.x,seg.ahead.target.y)
-        print("Behind position: ",seg.behind.position.x,seg.behind.position.y)
-        print("Behind target: ",seg.behind.target.x,seg.behind.target.y)
+        #print("Body: ",seg.position.x,seg.position.y)
+        #print("Body target: ",seg.target.x,seg.target.y)
+        #print("Ahead position: ",seg.ahead.position.x,seg.ahead.position.y)
+        #print("Ahead target: ",seg.ahead.target.x,seg.ahead.target.y)
+        #print("Behind position: ",seg.behind.position.x,seg.behind.position.y)
+        #print("Behind target: ",seg.behind.target.x,seg.behind.target.y)
         if seg.ahead.position == seg.position.atUp() :
             if seg.behind.position == seg.position.atDown():
                 return self.spriteSheet.image(2,1)
@@ -250,41 +243,41 @@ class Snake(Component):
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT or event.key == pygame.K_DOWN or event.key == pygame.K_UP:
                         lastKey = None
-                        if len(self.keys) != 0:
-                            lastKey = self.keys[0]
-                            if lastKey != event.key and len(self.keys) < 3:
-                                self.keys.insert(0,event.key)
+                        if len(self.keysPressed) != 0:
+                            lastKey = self.keysPressed[0]
+                            if lastKey != event.key and len(self.keysPressed) < 3:
+                                self.keysPressed.insert(0,event.key)
                         else :
-                            self.keys.insert(0,event.key)
-            self.compteur = self.compteur + 1
-            #if not PlayScreen.perdu and self.compteur >= frames:
-            if self.compteur >= self.frames:
-                print("Keys pressed:",self.keys)
-                if self.started  :
-                    self.checkDead()
+                            self.keysPressed.insert(0,event.key)
+            if self.started:
+                self.compteur = self.compteur + 1
+                if self.compteur >= self.frames:
+                    print("Keys pressed:",self.keysPressed)
+                    self.handleKeyPressed()
                     self.move()
-                if len(self.keys) > 0:
-                    keyPressed = self.keys.pop()
-                    if keyPressed == K_RIGHT:
-                        self.changeDirection(ALLDIRECTION[2])
-                    if keyPressed == K_LEFT:
-                        self.changeDirection(ALLDIRECTION[3])
-                    if keyPressed == K_DOWN:
-                        self.changeDirection(ALLDIRECTION[1])
-                    if keyPressed == K_UP:
-                        self.changeDirection(ALLDIRECTION[0])
-                for seg in self.head.backward():
-                    seg.reset()
-                apple = self.parent.apples[-1]
-                if self.head.position == apple.position:
-                    self.eatApple(apple)
-                self.compteur = 0
-    def checkDead(self):
-        if self.target != None:
+                    if self.checkAlive():
+                        for seg in self.head.backward():
+                            seg.reset()
+                        apple = self.parent.apples[-1]
+                        if self.head.position == apple.position:
+                            self.eatApple(apple)
+                    self.compteur = 0
+            else:
+                self.handleKeyPressed()
+    def handleKeyPressed(self):
+        if len(self.keysPressed) > 0:
+            keyPressed = self.keysPressed.pop()
+            self.changeDirection(keyPressed)
+    def checkAlive(self):
+        if not self.headTouchWall():
             if self.isAt(self.target):
                 self.alive = False
         else:
             self.alive = False
+        return self.alive
+    def headTouchWall(self):
+        b = self.head.position.y >= 0 and self.head.position.y < GAMEHEIGHT and self.head.position.x < GAMEWIDTH and self.head.position.x >= 0       
+        return not b
     def eatApple(self, apple):
         apple.crunched = True
         pygame.mixer.music.load(".\son\Crunched.mp3")
@@ -368,7 +361,6 @@ class PlayScreen(Screen):
         self.gameOver = GameOver(240, 360)
         self.image = pygame.Surface((WINDOWWIDTH, WINDOWHEIGHT))
         self.image.fill(WHITE)
-        self.apples = []
         pygame.draw.rect(self.image, LIGHT_GREEN, (GAMEAREA_ORIGINX, GAMEAREA_ORIGINY, BOXSIZE*(GAMEWIDTH), BOXSIZE*(GAMEHEIGHT)))
         for i in range(0, GAMEWIDTH):
             if(i%2 == 0):
@@ -381,16 +373,28 @@ class PlayScreen(Screen):
         super().addComponent(self.score)
         self.highestScore = HighestScore(500, 125)
         super().addComponent(self.highestScore)
+        self.removeComponent(self.gameOver)
+        PlayScreen.perdu = False
+        self.apples = []
+        self.serpent = None
+
+    def run(self):
+        for apple in self.apples:
+            self.removeComponent(apple)
+        if self.serpent != None:
+            self.removeComponent(self.serpent)
+        self.removeComponent(self.gameOver)
+
+        self.apples = []
+        PlayScreen.perdu = False
         self.serpent = Snake(7,7)  
         apple = Apple()
         while self.serpent.isAt(apple.position):
             apple = Apple()
         self.apples.append(apple)
         self.addComponent(apple)
-        super().addComponent(self.serpent)
-        self.removeComponent(self.gameOver)
-        PlayScreen.perdu = False
-
+        self.addComponent(self.serpent)
+        super().run()
     def update(self, events):
         super().update(events)
         if not self.serpent.alive:

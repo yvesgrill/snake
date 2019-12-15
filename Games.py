@@ -37,10 +37,11 @@ class Component:
         self.parent = None
         self.name = name
     def draw(self):
-        print("Vous devez définir la méthode draw")
+        #print("Vous devez définir la méthode draw")
+        pass
     def update(self, context):
-        print("Vous devez définir la méthode handleEvents")
-
+        #print("Vous devez définir la méthode handleEvents")
+        pass
         
 class Position:
     def __init__(self, x, y):
