@@ -1,0 +1,20 @@
+#optionsBtn {
+    background-color: rgb(30, 255, 0);
+    font-family: 'Segoe UI';
+    font-size: 48;
+    font-style: italic;
+    font-weight: bold;
+    width: 200px;
+    height: 100px;
+}
+button {
+    background-color: yellow;
+    color: green;
+}
+.home {
+    background-color: orange;
+}
+
+#homeWindow {
+    background-image: 'Menu.png';
+}
