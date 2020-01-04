@@ -1,5 +1,5 @@
 import random, time, pygame, sys, os
-from gui.Colors import *
+from gui.NamedColors import *
 from pygame.locals import *
 import pygame.mixer
 from gui.Component import *
@@ -12,4 +12,4 @@ class ImageView(Component):
     def update(self):
         super().update()
         icon = pygame.transform.scale(pygame.image.load(os.path.join('images', self.image)), self.get_dimension())
-        self.surface.blit(icon, (0, 0))
+        self.backgroundLayer.blit(icon, (0, 0))

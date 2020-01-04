@@ -1,14 +1,15 @@
 import random, time, pygame, sys, os
-from gui.Colors import *
+from gui.NamedColors import *
 from pygame.locals import *
 import pygame.mixer
 from gui.Commons import Theme
 from gui.Commons import Dimension
+import logging
 
 class Application:
     fpsClock = None
-    WINDOWWIDTH = 800
-    WINDOWHEIGHT = 840
+    WINDOWWIDTH = 688
+    WINDOWHEIGHT = 700
     fps = 60
     theme = None
     def __init__(self, name, fps, theme = Theme("Default")):
@@ -17,9 +18,13 @@ class Application:
         Application.fps = fps
         pygame.init()
         pygame.mixer.init()
+        info = pygame.display.Info()
+        logging.debug("Info: %d %d",info.current_w,info.current_h)
         Application.fpsClock = pygame.time.Clock()
-        self.display = pygame.display.set_mode((Application.WINDOWWIDTH, Application.WINDOWHEIGHT))
+        self.display = pygame.display.set_mode((Application.WINDOWWIDTH, Application.WINDOWHEIGHT) )
         pygame.display.set_caption(self.name )
+        info = pygame.display.Info()
+        logging.debug("Info: %d %d",info.current_w,info.current_h)
         self.windows = []
         self.activeWindows = []
     def get_window(self,id) :
@@ -51,6 +56,9 @@ class Application:
             window.dimension = Dimension(*self.display.get_size())
         if activate:
             self.activate_window(window)
+    def remove_window(self, window) :
+        if window in self.windows: 
+            self.windows.remove(window) 
     def get_current_window(self):
         if len(self.activeWindows) == 0:
             return None

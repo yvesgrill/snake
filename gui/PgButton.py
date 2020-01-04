@@ -1,11 +1,11 @@
 import pygame
 from pygame.locals import *
 from gui import *
-from gui.Colors import *
+import logging
 
 
 class PygButton(Component):
-    def __init__(self, position=(0,0), dimension=(30, 60), caption='', bgcolor=LIGHT_GRAY, fgcolor=BLACK, font=None, normal=None, down=None, highlight=None):
+    def __init__(self, position=(0,0), dimension=(30, 60), caption='', bgcolor=Color('lightgray'), fgcolor=Color('black'), font=None, normal=None, down=None, highlight=None):
         """Create a new button object. Parameters:
             rect - The size and position of the button as a pygame.Rect object
                 or 4-tuple of integers.
@@ -131,7 +131,7 @@ class PygButton(Component):
             self.mouseExit(eventObj)
             retVal.append('exit')
 
-        print("Retval= ",retVal)
+        logging.debug("Retval= %s",retVal)
 
     def draw(self):
         """Blit the current button's appearance to the surface object."""
@@ -156,34 +156,34 @@ class PygButton(Component):
         h = self._rect.height # syntactic sugar
 
         # fill background color for all buttons
-        self.surfaceNormal.fill(self.bgcolor.to_tuple())
-        self.surfaceDown.fill(self.bgcolor.to_tuple())
-        self.surfaceHighlight.fill(self.bgcolor.to_tuple())
+        self.surfaceNormal.fill(self.bgcolor)
+        self.surfaceDown.fill(self.bgcolor)
+        self.surfaceHighlight.fill(self.bgcolor)
 
         # draw caption text for all buttons
-        captionSurf = self._font.render(self._caption, True, self.fgcolor.to_tuple(), self.bgcolor.to_tuple())
+        captionSurf = self._font.render(self._caption, True, self.fgcolor, self.bgcolor)
         captionRect = captionSurf.get_rect()
         captionRect.center = int(w / 2), int(h / 2)
         self.surfaceNormal.blit(captionSurf, captionRect)
         self.surfaceDown.blit(captionSurf, captionRect)
 
         # draw border for normal button
-        pygame.draw.rect(self.surfaceNormal, BLACK.to_tuple(), pygame.Rect((0, 0, w, h)), 1) # black border around everything
-        pygame.draw.line(self.surfaceNormal, WHITE.to_tuple(), (1, 1), (w - 2, 1))
-        pygame.draw.line(self.surfaceNormal, WHITE.to_tuple(), (1, 1), (1, h - 2))
-        pygame.draw.line(self.surfaceNormal, DARK_GRAY.to_tuple(), (1, h - 1), (w - 1, h - 1))
-        pygame.draw.line(self.surfaceNormal, DARK_GRAY.to_tuple(), (w - 1, 1), (w - 1, h - 1))
-        pygame.draw.line(self.surfaceNormal, GRAY.to_tuple(), (2, h - 2), (w - 2, h - 2))
-        pygame.draw.line(self.surfaceNormal, GRAY.to_tuple(), (w - 2, 2), (w - 2, h - 2))
+        pygame.draw.rect(self.surfaceNormal, Color('black'), pygame.Rect((0, 0, w, h)), 1) # black border around everything
+        pygame.draw.line(self.surfaceNormal, Color('white'), (1, 1), (w - 2, 1))
+        pygame.draw.line(self.surfaceNormal, Color('white'), (1, 1), (1, h - 2))
+        pygame.draw.line(self.surfaceNormal, Color('darkgray'), (1, h - 1), (w - 1, h - 1))
+        pygame.draw.line(self.surfaceNormal, Color('darkgray'), (w - 1, 1), (w - 1, h - 1))
+        pygame.draw.line(self.surfaceNormal, Color('gray'), (2, h - 2), (w - 2, h - 2))
+        pygame.draw.line(self.surfaceNormal, Color('gray'), (w - 2, 2), (w - 2, h - 2))
 
         # draw border for down button
-        pygame.draw.rect(self.surfaceDown, BLACK.to_tuple(), pygame.Rect((0, 0, w, h)), 1) # black border around everything
-        pygame.draw.line(self.surfaceDown, WHITE.to_tuple(), (1, 1), (w - 2, 1))
-        pygame.draw.line(self.surfaceDown, WHITE.to_tuple(), (1, 1), (1, h - 2))
-        pygame.draw.line(self.surfaceDown, DARK_GRAY.to_tuple(), (1, h - 2), (1, 1))
-        pygame.draw.line(self.surfaceDown, DARK_GRAY.to_tuple(), (1, 1), (w - 2, 1))
-        pygame.draw.line(self.surfaceDown, GRAY.to_tuple(), (2, h - 3), (2, 2))
-        pygame.draw.line(self.surfaceDown, GRAY.to_tuple(), (2, 2), (w - 3, 2))
+        pygame.draw.rect(self.surfaceDown, Color('black'), pygame.Rect((0, 0, w, h)), 1) # black border around everything
+        pygame.draw.line(self.surfaceDown, Color('white'), (1, 1), (w - 2, 1))
+        pygame.draw.line(self.surfaceDown, Color('white'), (1, 1), (1, h - 2))
+        pygame.draw.line(self.surfaceDown, Color('darkgray'), (1, h - 2), (1, 1))
+        pygame.draw.line(self.surfaceDown, Color('darkgray'), (1, 1), (w - 2, 1))
+        pygame.draw.line(self.surfaceDown, Color('gray'), (2, h - 3), (2, 2))
+        pygame.draw.line(self.surfaceDown, Color('gray'), (2, 2), (w - 3, 2))
 
         # draw border for highlight button
         self.surfaceHighlight = self.surfaceNormal

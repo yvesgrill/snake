@@ -14,7 +14,7 @@ class TextInput(Component):
         surf = self.get_font().render(self.text,0,(0,0,0),None)
         #x = int((self.dimension.width-surf.get_width())/2)
         y = int((self.dimension.height-surf.get_height())/2)
-        self.surface.blit(surf, (0, y))
+        self.foregroundLayer.blit(surf, (0, y))
     def on_handle_event(self, event):
         #for event in events:
         if event.type == MOUSEBUTTONDOWN:

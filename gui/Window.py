@@ -1,7 +1,7 @@
 import random, time, pygame, sys, os
 from pygame.locals import *
 import pygame.mixer
-from gui.Colors import *
+from gui.NamedColors import *
 from gui.Container import *
 from gui.Application import *
 from gui.Commons import *
@@ -37,3 +37,12 @@ class Window(Container):
         self.application.activate_window(self)
     def get_application(self):
         return self.application
+    def draw(self):       
+        #super().draw()
+        layers = []
+        self.collect_layers(layers,[])
+        #print("Nb layers=",len(layers))
+        #for layer in layers:
+        #    print(layer)
+        self.application.display.blits(layers)
+

@@ -1,4 +1,4 @@
-from gui.Colors import NamedColors
+from gui.NamedColors import *
 from gui.Commons import Position
 from gui.Commons import Dimension
 from gui.Commons import FontStyle
@@ -12,4 +12,4 @@ from gui.Application import Application
 from gui.Button import Button
 from gui.Label import Label
 from gui.ImageView import ImageView
-from gui.SpriteSheet import SpriteSheet
+from gui.PgButton import PygButton
