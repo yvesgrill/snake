@@ -25,7 +25,7 @@ class Window(Container):
             self.on_handle_event(event)
             self.update()
             self.draw()
-            pygame.display.update()
+            #pygame.display.update()
             self.application.fpsClock.tick(Application.fps)   
             flag = self.is_current()  
     def is_current(self):
@@ -33,6 +33,7 @@ class Window(Container):
     def hide(self):
         self.application.desactivate_window(self)
     def show(self):
+        self.set_dirty(True)
         self.realize()
         self.application.activate_window(self)
     def get_application(self):
@@ -40,9 +41,15 @@ class Window(Container):
     def draw(self):       
         #super().draw()
         layers = []
-        self.collect_layers(layers,[])
+        self.collect_layers(layers)
         #print("Nb layers=",len(layers))
         #for layer in layers:
         #    print(layer)
-        self.application.display.blits(layers)
+        surfaces = []
+        areas = []
+        for layer in layers:
+            surfaces.append(layer.to_tuple())
+            areas.append(layer.area)
+        self.application.display.blits(surfaces)
+        pygame.display.update(areas)
 

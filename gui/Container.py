@@ -36,9 +36,12 @@ class Container(Component):
         super().on_handle_event(event)
         for component in self.components:
             component.on_handle_event(event)
-    def collect_layers(self,layers, id):
+    def collect_layers(self,layers, id=None):
         super().collect_layers(layers, ['background','foreground'])
         for component in self.components:
             component.collect_layers(layers,['background','foreground','overlay'])
         super().collect_layers(layers, ['overlay'])
-
+    def set_dirty(self, dirty):
+        super().set_dirty(dirty)
+        for component in self.components:
+            component.set_dirty(dirty)

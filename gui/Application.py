@@ -49,6 +49,10 @@ class Application:
     def desactivate_window(self,window) :
         if window == self.activeWindows[-1]:
            self.activeWindows.pop()
+        window = self.get_current_window()
+        if window != None:
+            window.set_dirty(True)
+
     def add_window(self, window, activate=False) :
         self.windows.append(window) 
         window.application = self

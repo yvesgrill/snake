@@ -12,9 +12,9 @@ class Layer:
         self.source = source
         self.area = area
         self.flags = flags
-        self.dirty = True
     def to_tuple(self):
-        return (self.source,self.dest,self.area, self.flags)
+        #return (self.source,self.dest,self.area, self.flags)
+        return (self.source,self.dest)
     def __str__(self):
         return 'Layer('+self.id+'):'+str(self.dest)
 class Component:
@@ -44,7 +44,7 @@ class Component:
         if themeStyle.visible != None: 
             self.visible = themeStyle.visible
         self.state = None
-        self.dirty = False
+        self.__dirty = True
         self.styles = {}
         self.layers = []
         themeStyle = Application.theme.get_style(self.get_id(),self.get_class(),self.__class__.__name__,'hover')
@@ -59,7 +59,7 @@ class Component:
             self.backgroundLayer = pygame.Surface(self.get_dimension())
             self.foregroundLayer = pygame.Surface(self.get_dimension())
             self.foregroundLayer.set_colorkey(BLACK)
-            
+            self.updateBackground()
             logging.debug("Surface= %d %d", self.backgroundLayer.get_width(), self.backgroundLayer.get_height())
             self.realized = True
     def get_background_color(self):
@@ -137,16 +137,18 @@ class Component:
         overlay = pygame.Surface(self.get_dimension())
         #self.backgroundLayer.fill(BLACK)
         overlay.set_alpha(128)
-        self.update_layer('overlay',overlay,(self.absoluteX(),self.absoluteY()))
+        self.update_layer('overlay',overlay,(self.absoluteX(),self.absoluteY()), (self.absoluteX(),self.absoluteY(), overlay.get_width(), overlay.get_height()))
     def remove_overlay(self):
         self.remove_layer('overlay')
 
     def updateBackground(self):
+        self.__dirty = True
+
         color = self.get_background_color()
         if color != None:
             self.backgroundLayer = pygame.Surface(self.get_dimension())
             self.backgroundLayer.fill(color)
-            self.update_layer('background',self.backgroundLayer,(self.absoluteX(),self.absoluteY()))
+            self.update_layer('background',self.backgroundLayer,(self.absoluteX(),self.absoluteY()), (self.absoluteX(),self.absoluteY(), self.backgroundLayer.get_width(), self.backgroundLayer.get_height()))
         if self.style.background.image != None :
             #if self.backgroundLayer == None:
             image = pygame.image.load(os.path.join('images', self.style.background.image)).convert()
@@ -198,9 +200,9 @@ class Component:
                     y = int(self.style.background.position[1])
 
             self.backgroundLayer.blit(image, (x, y))            
-            self.update_layer('background',self.backgroundLayer,(self.absoluteX(),self.absoluteY()))
+            self.update_layer('background',self.backgroundLayer,(self.absoluteX(),self.absoluteY()), (self.absoluteX(),self.absoluteY(), self.backgroundLayer.get_width(), self.backgroundLayer.get_height()))
     def updateText(self, text, color):
-        self.dirty = True
+        self.__dirty = True
         if color == BLACK:
             self.foregroundLayer.set_colorkey(WHITE)
             self.foregroundLayer.fill(WHITE)
@@ -208,11 +210,11 @@ class Component:
         x = int((self.dimension.get_width()-surf.get_width())/2)
         y = int((self.dimension.get_height()-surf.get_height())/2)
         #self.foregroundLayer.blit(surf, (x, y))
-        self.update_layer('foreground',surf,(self.absoluteX()+x,self.absoluteY()+y))
+        self.update_layer('foreground',surf,(self.absoluteX()+x,self.absoluteY()+y),(self.absoluteX(),self.absoluteY(), surf.get_width(), surf.get_height()))
 
     def update(self):
         logging.debug("Update component %s",self.id)
-        self.updateBackground()
+        #self.updateBackground()
 
     def draw(self):
         logging.debug("Draw component %s of size (%d,%d) at position (%d,%d)",self.id, self.get_width(), self.get_height(), *self.get_position())
@@ -279,23 +281,26 @@ class Component:
                 self.layers.remove(layer)
                 return
         return
-    def update_layer(self,id, source, dest):
+    def update_layer(self,id, source, dest, area):
         layer = None
         for l in self.layers:
             if l.id == id:
                 layer = l
         if layer == None:
-            layer = Layer(id,source, dest)
+            layer = Layer(id,source, dest, area)
             self.layers.append(layer)
         else:
             layer.source = source
             layer.dest = dest
     def collect_layers(self,layers,ids):
-        if self.is_visible() :
+        if self.is_visible() and self.__dirty :
+            self.__dirty = False
             logging.debug('Collect %d layers of component %s', len(self.layers),self.id)
             for layer in self.layers:
                 if layer.id in ids :
                     if layer.source != None:
-                        layers.append(layer.to_tuple())
+                        layers.append(layer)
                     else:
                         logging.warning('Layer %s of component %s is empty', layer.id, self.id)
+    def set_dirty(self, dirty):
+        self.__dirty = dirty

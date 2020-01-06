@@ -12,8 +12,10 @@ class Label(Component):
         self.__text = text
     def update(self):
         super().update()
-        self.updateText(self.__text, self.get_foreground_color())
     def set_text(self,text) :
         self.__text = text
-
+        self.updateText(self.__text, self.get_foreground_color())
+    def realize(self):
+        super().realize()
+        self.updateText(self.__text, self.get_foreground_color())
 
