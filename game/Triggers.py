@@ -10,6 +10,8 @@ class Trigger:
         pass
     def reset(self):
         pass
+    def start(self):
+        pass
     
 class FrameCountTrigger(Trigger):
     def __init__(self, frameFreq):
@@ -22,6 +24,8 @@ class FrameCountTrigger(Trigger):
             self.frameCount = 0
         self.frameCount += 1
     def reset(self):
+        self.frameCount = 0
+    def start(self):
         self.frameCount = 0
 class TimeTrigger(Trigger):
     def __init__(self, delay):

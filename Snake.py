@@ -256,7 +256,7 @@ class Snake(pygame.sprite.RenderPlain):
                             self.keysPressed.insert(0,event.key)
     def update(self):
         if self.alive :
-            self.tongue.update()
+            self.tongue.checkTrigger()
             self.eyes.update()
             if self.nextMove != None:
                 if self.frameCounter.check():
@@ -313,63 +313,67 @@ class SnakeTongue(pygame.sprite.Sprite):
         self.out = False
         self.index = 0
         self.trigger = TimeTrigger(150)
-    def update(self):
+    def checkTrigger(self):
         if self.snake.alive :
             if not self.out:
-                self.trigger.start()
                 n = random.randint(0,500)
                 if n == 0:
+                    self.trigger.start()
                     self.out = True
+                    self.index = 0
                     self.snake.add(self)         
                 #if self.out:
                 #    sound = pygame.mixer.Sound('./son/Hiss.wav')
                 #    sound.play()
             else :
-                if self.index > 20:
+                shift = self.snake.nextMove
+                if shift == None:
+                    shift = self.snake.head.orientation
+                cell = self.snake.head.cell.at(shift.x,shift.y)
+
+                if self.index > 19 or cell.blocking:
                     self.index = 0
                     self.trigger.reset()
                     self.out = False
                     self.snake.remove(self)    
                 else:
                     if self.trigger.check():
+                        #self._draw()
                         self.index += 1                
                     self.trigger.update()
-                    self._draw()
-    def _draw(self):
+    def update(self):
         if self.out :
             shift = self.snake.nextMove
             if shift == None:
                 shift = self.snake.head.orientation
             cell = self.snake.head.cell.at(shift.x,shift.y)
             self.image,shift = self.get_image()
-            if self.image != None and cell != None and not cell.blocking:
-                logging.debug("Head cell=%d %d", self.snake.head.cell.i, self.snake.head.cell.j)
-                logging.debug("Tongue cell=%d %d", cell.i, cell.j)
-                #cell.draw_image(image, shift)
-                self.rect = Rect(cell.x+shift[0], cell.y+shift[1], self.image.get_width(), self.image.get_height())
+#            if self.image != None and cell != None and not cell.blocking:
+            logging.debug("Head cell=%d %d", self.snake.head.cell.i, self.snake.head.cell.j)
+            logging.debug("Tongue cell=%d %d", cell.i, cell.j)
+            #cell.draw_image(image, shift)
+            self.rect = Rect(cell.x+shift[0], cell.y+shift[1], self.image.get_width(), self.image.get_height())
 
     def get_image(self):
         shift = (-10,0)
         image = self.spriteSheet.image(0,self.index)
-        if image == None:
-            self.index = 0
-            self.out = False
-            self.snake.remove(self)         
-        else:
-            image = pygame.transform.scale(image, (48, Cell.SIZE))
+        if image != None:
+            image = pygame.transform.scale(image, (40, Cell.SIZE))
             orientation = self.snake.nextMove
             if orientation == None:
                 orientation = self.snake.head.orientation
             if orientation == UP:
                 image = pygame.transform.rotate(image, 90)
-                shift = (0,-10)
+                shift = (0,-5)
             elif orientation == DOWN :
                 image = pygame.transform.rotate(image, 270)
                 shift = (0,-10)
             elif orientation == LEFT :
                 image = pygame.transform.rotate(image, 180)
+                shift = (0,2)
             elif orientation == RIGHT :
                 image = image
+                shift = (-5,0)
             logging.debug("Index=%d",self.index)
         return (image,shift)
 
@@ -596,7 +600,7 @@ class PlayArea(Component):
         return False
     def addSnake(self) :
         cell = self.map.cell(*self.map.startCell)
-        self.snake = Snake(cell, self.spriteSheet, LEFT)
+        self.snake = Snake(cell, self.spriteSheet, RIGHT)
         logging.debug('%s',self.snake)
         logging.debug('Snake head position: %d %d %d %d',self.snake.head.cell.x, self.snake.head.cell.y, self.snake.head.cell.absoluteX(), self.snake.head.cell.absoluteY())
         tongueSpriteSheet = SpriteSheet("tongue.png",48,24,1,21)

@@ -13,8 +13,9 @@ class Label(Component):
     def update(self):
         super().update()
     def set_text(self,text) :
-        self.__text = text
-        self.updateText(self.__text, self.get_foreground_color())
+        if text != self.__text:
+            self.__text = text
+            self.updateText(self.__text, self.get_foreground_color())
     def realize(self):
         super().realize()
         self.updateText(self.__text, self.get_foreground_color())
